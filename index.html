@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RobodexBRICS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+/* ====== RESET & VARS ====== */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --void:#04020a; --bg1:#080514; --bg2:#0e0a1c; --bg3:#180e06;
+  --sand1:#1a0e04; --sand2:#2d1a08; --sand3:#4a2e10; --sand4:#6b4218;
+  --gold:#e8a030; --amber:#f4c060; --cream:#fae8a0; --white:#fff8e8;
+  --copper:#d06820; --ember:#e84820;
+  --teal:#20c8a0; --jade:#10a870;
+  --txt:#e8d0a0; --txt2:#a07840; --txt3:#604820;
+  --border:rgba(232,160,48,0.15); --border2:rgba(232,160,48,0.08);
+  --glow:rgba(232,160,48,0.25);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--void);
+  color:var(--txt);font-family:'Lato',sans-serif;font-weight:300;font-size:14px;}
+
+/* ====== CANVAS ====== */
+#bg-canvas,#pt-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#pt-canvas{z-index:1;}
+
+/* ====== SCREEN SYSTEM ====== */
+/* Only one screen visible at a time, stacked above canvas */
+.SCR{
+  position:fixed;inset:0;z-index:10;
+  display:none;
+  background:transparent;
+}
+.SCR.ON{display:flex;flex-direction:column;}
+
+/* ====== TYPOGRAPHY ====== */
+.f-cin{font-family:'Cinzel',serif;}
+.f-lat{font-family:'Lato',sans-serif;}
+
+/* ====== SCROLLBAR ====== */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(232,160,48,0.2);border-radius:2px;}
+
+/* =============================================
+   SCREEN 1: INTRO
+   ============================================= */
+#s-intro{
+  align-items:center;justify-content:center;text-align:center;
+  background:transparent; /* canvas shows through */
+}
+
+.intro-wrap{position:relative;z-index:2;}
+
+.i-sigil{
+  width:140px;height:140px;margin:0 auto 28px;
+  animation:sigilPulse 3s ease-in-out infinite;
+}
+@keyframes sigilPulse{
+  0%,100%{filter:drop-shadow(0 0 20px var(--gold)) drop-shadow(0 0 50px var(--amber));transform:scale(1);}
+  50%    {filter:drop-shadow(0 0 40px var(--amber)) drop-shadow(0 0 90px var(--gold));transform:scale(1.04);}
+}
+
+.i-eyebrow{
+  font-family:'Lato',sans-serif;font-size:11px;font-weight:400;
+  letter-spacing:5px;text-transform:uppercase;color:var(--amber);
+  margin-bottom:10px;opacity:.7;
+}
+.i-title{
+  font-family:'Cinzel',serif;font-size:clamp(36px,7vw,70px);font-weight:700;
+  color:var(--cream);letter-spacing:2px;line-height:1;margin-bottom:6px;
+  text-shadow:0 0 40px var(--gold),0 0 80px rgba(232,160,48,.4);
+  animation:titlePulse 4s ease-in-out infinite;
+}
+@keyframes titlePulse{
+  0%,100%{text-shadow:0 0 40px var(--gold),0 0 80px rgba(232,160,48,.3);}
+  50%    {text-shadow:0 0 60px var(--amber),0 0 120px rgba(232,160,48,.5);}
+}
+.i-sub{
+  font-family:'Lato',sans-serif;font-size:14px;font-weight:300;font-style:italic;
+  letter-spacing:3px;color:var(--amber);margin-bottom:52px;opacity:.8;
+}
+.i-btn{
+  font-family:'Cinzel',serif;font-size:13px;font-weight:600;letter-spacing:4px;
+  text-transform:uppercase;color:var(--cream);background:transparent;
+  border:1px solid rgba(232,160,48,.4);padding:13px 44px;cursor:pointer;
+  transition:all .3s;
+  animation:btnAppear 1s ease forwards .8s;opacity:0;
+}
+.i-btn:hover{background:rgba(232,160,48,.08);border-color:var(--amber);
+  box-shadow:0 0 40px rgba(232,160,48,.3);}
+@keyframes btnAppear{to{opacity:1;}}
+
+/* =============================================
+   SCREEN 2: PLATFORM — nav + pages
+   ============================================= */
+#s-plat{background:transparent;}
+
+/* NAV */
+.p-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:58px;flex-shrink:0;
+  background:rgba(4,2,10,.85);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);z-index:20;position:relative;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.nav-logo-icon{width:32px;height:32px;filter:drop-shadow(0 0 8px var(--gold));}
+.nav-logo-txt{
+  font-family:'Cinzel',serif;font-size:15px;font-weight:700;
+  color:var(--cream);letter-spacing:2px;text-shadow:0 0 20px var(--gold);
+}
+.nav-links{display:flex;gap:2px;}
+.nl{
+  font-size:12px;font-weight:400;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--txt2);padding:7px 14px;cursor:pointer;border-radius:2px;
+  transition:color .2s;position:relative;
+}
+.nl:hover{color:var(--txt);}
+.nl.on{color:var(--amber);}
+.nl.on::after{
+  content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+  width:18px;height:1.5px;background:var(--gold);
+  box-shadow:0 0 8px var(--gold);
+}
+.nav-prof{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  font-family:'Cinzel',serif;font-size:12px;color:var(--amber);
+}
+.nav-avatar{
+  width:32px;height:32px;border-radius:50%;
+  border:1.5px solid rgba(232,160,48,.35);
+  background:var(--sand2);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 12px rgba(232,160,48,.15);
+}
+
+/* PAGE CONTAINER */
+.p-pages{flex:1;position:relative;overflow:hidden;}
+.PAGE{
+  display:none;position:absolute;inset:0;overflow-y:auto;
+}
+.PAGE.ON{display:block;}
+
+/* =============================================
+   PAGE: MAP
+   ============================================= */
+#pg-map{overflow:hidden;}
+.map-wrap{position:relative;width:100%;height:100%;}
+.map-svg{position:absolute;inset:0;width:100%;height:100%;}
+
+/* Cluster nodes */
+.c-node{
+  position:absolute;transform:translate(-50%,-50%);
+  cursor:pointer;z-index:5;
+  display:flex;flex-direction:column;align-items:center;
+}
+.c-orb{
+  width:54px;height:54px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;transition:transform .3s;
+}
+.c-node:hover .c-orb{transform:scale(1.15);}
+.c-orb.active{
+  background:radial-gradient(circle at 35% 35%,var(--amber),var(--gold) 55%,var(--copper));
+  box-shadow:0 0 28px var(--gold),0 0 56px rgba(232,160,48,.35);
+}
+.c-orb.locked{
+  background:radial-gradient(circle at 35% 35%,#222838,#10141e);
+  box-shadow:0 0 10px rgba(40,60,100,.2);filter:saturate(.3) brightness(.55);
+}
+/* Glow ring */
+@keyframes ring{0%{transform:scale(1);opacity:.7;}100%{transform:scale(2.4);opacity:0;}}
+.ring{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:1.5px solid var(--gold);
+  animation:ring 2.6s ease-out infinite;pointer-events:none;
+}
+.ring:nth-child(2){animation-delay:.9s;}
+.ring:nth-child(3){animation-delay:1.8s;}
+.c-label{
+  font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:1.5px;
+  text-align:center;margin-top:10px;white-space:nowrap;pointer-events:none;
+}
+.c-node .c-label.active{color:var(--amber);text-shadow:0 0 10px var(--gold);}
+.c-node .c-label.locked{color:#363854;}
+.c-sub{font-family:'Lato',sans-serif;font-size:9px;letter-spacing:1px;opacity:.7;margin-top:2px;}
+
+/* Mission panel — slides from right */
+.mp{
+  position:absolute;top:0;right:0;bottom:0;width:360px;z-index:15;
+  background:linear-gradient(155deg,rgba(8,5,20,.97),rgba(18,10,4,.97));
+  border-left:1px solid var(--border);backdrop-filter:blur(28px);
+  transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);
+  display:flex;flex-direction:column;
+}
+.mp.open{transform:translateX(0);}
+.mp-hd{padding:24px 24px 18px;border-bottom:1px solid var(--border2);flex-shrink:0;}
+.mp-close{
+  position:absolute;top:18px;right:18px;width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  color:var(--txt2);font-size:18px;transition:color .2s;
+}
+.mp-close:hover{color:var(--amber);}
+.mp-tag{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--copper);margin-bottom:7px;}
+.mp-title{
+  font-family:'Cinzel',serif;font-size:19px;font-weight:600;
+  color:var(--cream);line-height:1.3;
+  text-shadow:0 0 20px rgba(232,160,48,.25);
+}
+.mp-body{flex:1;overflow-y:auto;padding:20px 24px;}
+.mp-desc{font-size:13px;line-height:1.85;color:var(--txt);opacity:.85;margin-bottom:20px;}
+.mp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:22px;}
+.mp-p{background:rgba(232,160,48,.04);border:1px solid var(--border2);padding:9px 11px;border-radius:3px;}
+.mp-pl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);margin-bottom:3px;}
+.mp-pv{font-family:'Cinzel',serif;font-size:14px;color:var(--amber);}
+.mp-pv.d{color:#e85030;}
+.mp-reqs{margin-bottom:22px;}
+.mp-req{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--txt);margin-bottom:7px;opacity:.85;}
+.orb-sm{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  background:rgba(232,160,48,.15);border:1px solid rgba(232,160,48,.2);
+}
+.orb-sm.ok{background:var(--teal);border-color:var(--jade);box-shadow:0 0 6px var(--teal);}
+.mp-cta{
+  width:100%;font-family:'Cinzel',serif;font-size:13px;font-weight:600;
+  letter-spacing:3px;text-transform:uppercase;color:var(--void);
+  background:linear-gradient(135deg,var(--amber),var(--gold));
+  border:none;padding:13px;border-radius:2px;cursor:pointer;
+  box-shadow:0 4px 18px rgba(232,160,48,.4);transition:all .3s;
+}
+.mp-cta:hover{box-shadow:0 6px 28px rgba(232,160,48,.6);transform:translateY(-1px);}
+
+/* =============================================
+   PAGE: MISSIONS
+   ============================================= */
+#pg-missions{padding:36px;}
+.miss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:20px;}
+.miss-card{
+  background:rgba(232,160,48,.04);border:1px solid var(--border);
+  border-radius:4px;padding:20px;transition:border-color .2s;
+}
+.miss-card:hover{border-color:rgba(232,160,48,.3);}
+.miss-card.active-card{cursor:pointer;}
+.miss-card.locked-card{opacity:.45;}
+.mc-tag{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
+.mc-tag.live{color:var(--copper);}
+.mc-tag.lock{color:var(--txt3);}
+.mc-name{font-family:'Cinzel',serif;font-size:15px;color:var(--cream);margin-bottom:7px;}
+.mc-desc{font-size:12px;line-height:1.75;color:var(--txt);opacity:.75;margin-bottom:14px;}
+.mc-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:9px;letter-spacing:1px;padding:3px 9px;border:1px solid var(--border);border-radius:2px;color:var(--amber);}
+
+/* =============================================
+   PAGE: PROFILE
+   ============================================= */
+#pg-profile{padding:36px;}
+.prof-hero{display:flex;gap:28px;align-items:flex-start;margin-bottom:36px;}
+.prof-avatar{
+  width:88px;height:88px;border-radius:50%;flex-shrink:0;
+  border:2px solid rgba(232,160,48,.3);
+  background:radial-gradient(circle at 35% 35%,var(--sand3),var(--sand1));
+  display:flex;align-items:center;justify-content:center;font-size:44px;
+  box-shadow:0 0 36px rgba(232,160,48,.18);
+}
+.prof-name{font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:var(--cream);margin-bottom:6px;}
+.prof-level{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:14px;}
+.xp-bar-w{width:260px;height:3px;background:rgba(232,160,48,.1);border-radius:2px;margin-bottom:5px;}
+.xp-bar{height:100%;width:68%;background:linear-gradient(90deg,var(--copper),var(--amber));
+  box-shadow:0 0 8px var(--gold);border-radius:2px;}
+.xp-txt{font-size:11px;color:var(--txt2);letter-spacing:1px;}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px;margin-top:18px;}
+.ach{
+  background:rgba(232,160,48,.04);border:1px solid var(--border2);
+  border-radius:4px;padding:16px;text-align:center;transition:all .2s;
+}
+.ach:hover:not(.ach-lock){border-color:rgba(232,160,48,.25);background:rgba(232,160,48,.07);}
+.ach-lock{opacity:.3;filter:grayscale(1);}
+.ach-ico{font-size:26px;margin-bottom:8px;filter:drop-shadow(0 0 6px var(--gold));}
+.ach-lock .ach-ico{filter:none;}
+.ach-name{font-family:'Cinzel',serif;font-size:11px;color:var(--cream);margin-bottom:3px;}
+.ach-desc{font-size:10px;color:var(--txt2);line-height:1.5;}
+
+/* =============================================
+   PAGE: CLUSTERS
+   ============================================= */
+#pg-clusters{padding:36px;}
+.cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:13px;margin-top:18px;}
+.cl-card{background:rgba(232,160,48,.04);border:1px solid var(--border);border-radius:4px;padding:18px;}
+.cl-name{font-family:'Cinzel',serif;font-size:13px;margin-bottom:4px;}
+.cl-sub{font-size:10px;letter-spacing:1px;color:var(--txt2);margin-bottom:9px;}
+.cl-desc{font-size:12px;line-height:1.75;color:var(--txt);opacity:.8;}
+
+/* Shared heading */
+.sec-hd{
+  font-family:'Cinzel',serif;font-size:11px;font-weight:600;
+  letter-spacing:4px;text-transform:uppercase;color:var(--txt2);
+  display:flex;align-items:center;gap:12px;
+}
+.sec-hd::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,160,48,.15),transparent);}
+
+/* =============================================
+   SCREEN 3: GAME
+   ============================================= */
+#s-game{display:none;}
+#s-game.ON{
+  display:grid;
+  grid-template-columns:268px 1fr;
+  grid-template-rows:52px 1fr 46px;
+}
+
+/* Game header */
+.gh{
+  grid-column:1/3;grid-row:1;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  background:rgba(4,2,10,.9);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);z-index:20;
+}
+.gh-back{
+  font-family:'Cinzel',serif;font-size:12px;color:var(--txt2);
+  cursor:pointer;letter-spacing:1px;transition:color .2s;padding:6px 0;
+}
+.gh-back:hover{color:var(--amber);}
+.gh-title{font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--amber);letter-spacing:2px;}
+.gh-stats{display:flex;gap:20px;}
+.ghs{display:flex;align-items:center;gap:7px;}
+.ghs-l{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);}
+.ghs-v{font-family:'Cinzel',serif;font-size:14px;color:var(--amber);}
+
+/* Game sidebar */
+.gsb{
+  grid-column:1;grid-row:2;
+  background:linear-gradient(180deg,rgba(8,5,20,.96),rgba(18,10,4,.96));
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto;
+  backdrop-filter:blur(20px);
+}
+.gsb-s{padding:16px 18px;border-bottom:1px solid var(--border2);}
+.gsb-t{
+  font-family:'Cinzel',serif;font-size:9px;font-weight:600;
+  letter-spacing:3px;text-transform:uppercase;color:var(--txt2);margin-bottom:12px;
+}
+
+/* Mission card small */
+.mc-sm{background:rgba(232,160,48,.04);border:1px solid var(--border);border-radius:3px;padding:12px;}
+.mcs-n{font-family:'Cinzel',serif;font-size:13px;color:var(--cream);margin-bottom:5px;}
+.mcs-d{font-size:11px;line-height:1.7;color:var(--txt);opacity:.75;margin-bottom:10px;}
+.mcs-g{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.mcs-p{background:rgba(232,160,48,.03);border:1px solid var(--border2);padding:5px 7px;border-radius:2px;}
+.mcs-pl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);margin-bottom:2px;}
+.mcs-pv{font-family:'Cinzel',serif;font-size:12px;color:var(--amber);}
+.mcs-pv.d{color:#e85030;}
+
+/* Requirements */
+.req{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--txt);margin-bottom:7px;opacity:.85;}
+.req-led{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  background:rgba(232,160,48,.12);border:1px solid rgba(232,160,48,.2);
+  transition:all .3s;
+}
+.req-led.ok{background:var(--teal);border-color:var(--jade);box-shadow:0 0 6px var(--teal);}
+.req-led.no{background:#e85030;border-color:#a02010;box-shadow:0 0 6px #e85030;}
+
+/* Component list */
+.comp-tl{
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--copper);
+  padding:5px 0 3px;border-bottom:1px solid var(--border2);margin:7px 0 5px;
+}
+.comp-r{
+  display:flex;align-items:center;gap:9px;padding:5px 7px;border-radius:3px;
+  cursor:pointer;border:1px solid transparent;transition:all .2s;margin-bottom:2px;
+}
+.comp-r:hover{background:rgba(232,160,48,.06);border-color:rgba(232,160,48,.12);}
+.comp-r.inb{opacity:.28;pointer-events:none;}
+.comp-r-ico{font-size:15px;flex-shrink:0;}
+.comp-r-n{flex:1;font-size:12px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.comp-r-s{font-size:9px;color:var(--txt2);letter-spacing:.5px;}
+.comp-r-c{font-family:'Cinzel',serif;font-size:11px;color:var(--amber);flex-shrink:0;}
+
+/* Game main */
+.gm{
+  grid-column:2;grid-row:2;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:rgba(4,2,8,.7);
+}
+.g-tabs{
+  display:flex;flex-shrink:0;
+  background:rgba(4,2,10,.8);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(10px);
+}
+.g-tab{
+  font-size:11px;font-weight:400;letter-spacing:2px;text-transform:uppercase;
+  color:var(--txt2);padding:13px 22px;cursor:pointer;border:none;background:transparent;
+  position:relative;transition:color .2s;
+}
+.g-tab:hover{color:var(--txt);}
+.g-tab.on{color:var(--amber);}
+.g-tab.on::after{
+  content:'';position:absolute;bottom:0;left:22px;right:22px;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  box-shadow:0 0 6px var(--gold);
+}
+.g-tc{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.g-tc.on{display:flex;}
+
+/* Build area */
+.build-wrap{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.build-wrap::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 100%,rgba(232,160,48,.07),transparent 70%),
+    radial-gradient(ellipse 40% 60% at 15% 50%,rgba(208,104,32,.04),transparent 70%),
+    radial-gradient(ellipse 30% 40% at 85% 30%,rgba(32,200,160,.03),transparent 70%);
+  pointer-events:none;
+}
+.build-hint{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(160,120,64,.4);pointer-events:none;white-space:nowrap;
+}
+.drone-scene{position:relative;width:560px;height:400px;flex-shrink:0;}
+.drone-scene>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+
+/* Slots — hex gem style */
+.bslot{position:absolute;cursor:pointer;}
+.slot-g{display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .2s;}
+.slot-shape{
+  width:62px;height:54px;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  background:rgba(232,160,48,.06);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .25s;font-size:18px;
+}
+.bslot:hover .slot-shape{background:rgba(232,160,48,.14);filter:drop-shadow(0 0 10px rgba(232,160,48,.4));}
+.slot-g.fi .slot-shape{background:rgba(32,200,160,.1);filter:drop-shadow(0 0 8px rgba(32,200,160,.5));}
+.bslot:hover .slot-g.fi .slot-shape{background:rgba(232,80,48,.12);filter:drop-shadow(0 0 10px rgba(232,80,48,.4));}
+.slot-lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(160,120,64,.55);text-align:center;}
+.slot-g.fi .slot-lbl{color:var(--teal);font-size:10px;max-width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Log */
+.log-wrap{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;}
+.le{display:flex;gap:12px;animation:leIn .4s ease forwards;opacity:0;}
+@keyframes leIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+.l-av{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid rgba(232,160,48,.22);background:var(--sand2);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 10px rgba(232,160,48,.08);
+}
+.l-body{flex:1;}
+.l-spk{font-family:'Cinzel',serif;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:5px;}
+.l-bub{
+  background:rgba(232,160,48,.04);border:1px solid var(--border2);
+  border-left:2px solid rgba(232,160,48,.25);padding:10px 14px;
+  font-size:13px;line-height:1.8;color:var(--txt);border-radius:0 3px 3px 0;
+}
+.l-bub.al{border-left-color:#e85030;background:rgba(232,80,48,.05);color:#f08060;}
+
+/* Test */
+.test-wrap{flex:1;overflow-y:auto;padding:20px;}
+.test-hrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.test-t{font-family:'Cinzel',serif;font-size:18px;color:var(--cream);}
+.test-s{font-size:11px;color:var(--txt2);letter-spacing:1px;margin-top:3px;}
+.rcard{background:rgba(232,160,48,.04);border:1px solid var(--border);border-radius:4px;padding:18px;margin-bottom:14px;}
+.r-status{font-family:'Cinzel',serif;font-size:17px;margin-bottom:14px;}
+.r-pass{color:var(--teal);text-shadow:0 0 10px var(--teal);}
+.r-fail{color:#e85030;text-shadow:0 0 10px #e85030;}
+.m-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.m-b{background:rgba(4,2,10,.6);border:1px solid var(--border2);padding:11px;text-align:center;border-radius:3px;}
+.m-val{font-family:'Cinzel',serif;font-size:24px;margin-bottom:3px;line-height:1;}
+.m-nm{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);}
+.t-log{background:rgba(4,2,10,.5);border:1px solid var(--border2);padding:12px 14px;font-size:12px;line-height:1.85;border-radius:3px;}
+.tok{color:var(--teal);}
+.terr{color:#e85030;}
+
+/* Status bar */
+.g-sb2{
+  grid-column:1/3;grid-row:3;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  background:rgba(4,2,10,.9);border-top:1px solid var(--border);
+  backdrop-filter:blur(20px);
+}
+.btrack{display:flex;align-items:center;gap:10px;}
+.btrack-l{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);}
+.baro{width:110px;height:3px;background:rgba(232,160,48,.1);border-radius:2px;overflow:hidden;}
+.bari{height:100%;background:linear-gradient(90deg,var(--copper),var(--amber));
+  border-radius:2px;box-shadow:0 0 8px var(--gold);transition:width .25s;}
+.bnum{font-family:'Cinzel',serif;font-size:13px;color:var(--amber);}
+.sb-btns{display:flex;gap:9px;}
+
+/* Buttons */
+.btn{
+  font-family:'Cinzel',serif;font-size:11px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;
+  padding:8px 18px;transition:all .2s;
+}
+.btn-ghost{
+  color:var(--txt2);background:transparent;border:1px solid rgba(232,160,48,.18);
+}
+.btn-ghost:hover{color:var(--amber);border-color:rgba(232,160,48,.4);}
+.btn-pri{
+  color:var(--void);background:linear-gradient(135deg,var(--amber),var(--gold));
+  border:none;box-shadow:0 2px 12px rgba(232,160,48,.4);
+}
+.btn-pri:hover{box-shadow:0 4px 22px rgba(232,160,48,.6);transform:translateY(-1px);}
+.btn-pri:active{transform:translateY(0);}
+
+/* ====== MODAL ====== */
+.modal-ov{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(4,2,10,.88);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.modal-ov.hid{display:none;}
+.modal-box{
+  background:linear-gradient(155deg,rgba(8,5,20,.99),rgba(18,10,4,.99));
+  border:1px solid rgba(232,160,48,.22);border-radius:4px;
+  padding:28px;max-width:500px;width:100%;max-height:84vh;overflow-y:auto;
+  position:relative;
+  box-shadow:0 0 60px rgba(232,160,48,.12);
+}
+.modal-box::before,.modal-box::after{
+  content:'';position:absolute;width:14px;height:14px;
+}
+.modal-box::before{top:0;left:0;border-top:1.5px solid var(--amber);border-left:1.5px solid var(--amber);}
+.modal-box::after{bottom:0;right:0;border-bottom:1.5px solid var(--amber);border-right:1.5px solid var(--amber);}
+.modal-t{
+  font-family:'Cinzel',serif;font-size:15px;font-weight:600;
+  color:var(--cream);margin-bottom:18px;letter-spacing:1px;
+}
+
+/* Comp modal items */
+.cmi{background:rgba(232,160,48,.03);border:1px solid var(--border2);border-radius:3px;padding:13px;margin-bottom:9px;transition:border-color .2s;}
+.cmi:hover{border-color:rgba(232,160,48,.22);}
+.cmi.sel{border-color:rgba(32,200,160,.35);background:rgba(32,200,160,.04);}
+.cmi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px;}
+.cmi-name{font-family:'Cinzel',serif;font-size:14px;color:var(--cream);}
+.cmi-badges{display:flex;gap:4px;flex-wrap:wrap;}
+.badge{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;border-radius:2px;border:1px solid;}
+.b-is{color:var(--teal);border-color:rgba(32,200,160,.3);background:rgba(32,200,160,.06);}
+.b-im{color:#e85030;border-color:rgba(232,80,48,.3);background:rgba(232,80,48,.06);}
+.b-lc{color:var(--amber);border-color:rgba(232,160,48,.3);background:rgba(232,160,48,.06);}
+.cmi-desc{font-size:12px;line-height:1.75;color:var(--txt);opacity:.8;margin-bottom:10px;}
+.cmi-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;}
+.cs{background:rgba(4,2,10,.5);border:1px solid var(--border2);padding:5px 9px;border-radius:2px;}
+.cs-l{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);margin-bottom:2px;}
+.cs-v{font-family:'Cinzel',serif;font-size:13px;color:var(--txt);}
+.cs-v.g{color:var(--teal);}
+.cs-v.b{color:#e85030;}
+
+/* Cert */
+.cert{text-align:center;padding:6px 0;}
+.cert-ico{font-size:48px;margin-bottom:14px;filter:drop-shadow(0 0 18px var(--gold));}
+.cert-t{
+  font-family:'Cinzel',serif;font-size:17px;font-weight:700;
+  color:var(--cream);text-shadow:0 0 20px var(--gold);margin-bottom:14px;line-height:1.4;
+}
+.cert-d{font-size:13px;line-height:1.85;color:var(--txt);margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<canvas id="pt-canvas"></canvas>
+
+<!-- ==================== INTRO ==================== -->
+<div id="s-intro" class="SCR ON">
+  <div class="intro-wrap">
+    <div class="i-sigil">
+      <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="sg" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#fae8a0" stop-opacity=".9"/>
+            <stop offset="45%"  stop-color="#e8a030" stop-opacity=".6"/>
+            <stop offset="100%" stop-color="#d06820" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="70" cy="70" r="64" fill="none" stroke="rgba(232,160,48,.2)" stroke-width=".8"/>
+        <circle cx="70" cy="70" r="55" fill="none" stroke="rgba(232,160,48,.12)" stroke-width=".5"/>
+        <polygon points="70,8 86,42 122,28 102,60 132,70 102,80 122,112 86,98 70,132 54,98 18,112 38,80 8,70 38,60 18,28 54,42"
+          fill="none" stroke="rgba(232,160,48,.38)" stroke-width=".8"/>
+        <polygon points="70,32 104,70 70,108 36,70"
+          fill="url(#sg)" stroke="rgba(232,160,48,.55)" stroke-width="1"/>
+        <polygon points="70,46 90,70 70,94 50,70"
+          fill="none" stroke="rgba(250,232,160,.45)" stroke-width=".8"/>
+        <circle cx="70" cy="70" r="6" fill="rgba(250,232,160,.9)"/>
+        <circle cx="70" cy="70" r="2.5" fill="#fff8e8"/>
+        <circle cx="70" cy="8"  r="2" fill="rgba(232,160,48,.55)"/>
+        <circle cx="70" cy="132" r="2" fill="rgba(232,160,48,.55)"/>
+        <circle cx="8"  cy="70" r="2" fill="rgba(232,160,48,.55)"/>
+        <circle cx="132" cy="70" r="2" fill="rgba(232,160,48,.55)"/>
+      </svg>
+    </div>
+    <div class="i-eyebrow">Киберфизическая платформа</div>
+    <div class="i-title">RobodexBRICS</div>
+    <div class="i-sub">Desert Horizon · Season I</div>
+    <button class="i-btn" onclick="showScreen('s-plat')">Войти в платформу</button>
+  </div>
+</div>
+
+<!-- ==================== PLATFORM ==================== -->
+<div id="s-plat" class="SCR">
+  <nav class="p-nav">
+    <div class="nav-logo" onclick="showScreen('s-plat')">
+      <svg class="nav-logo-icon" viewBox="0 0 32 32">
+        <polygon points="16,2 20,10 28,7 24,15 30,16 24,17 28,25 20,22 16,30 12,22 4,25 8,17 2,16 8,15 4,7 12,10"
+          fill="none" stroke="rgba(232,160,48,.55)" stroke-width=".6"/>
+        <polygon points="16,7 23,16 16,25 9,16"
+          fill="rgba(232,160,48,.12)" stroke="rgba(232,160,48,.5)" stroke-width=".8"/>
+        <circle cx="16" cy="16" r="3.5" fill="rgba(250,232,160,.85)"/>
+      </svg>
+      <span class="nav-logo-txt f-cin">RobodexBRICS</span>
+    </div>
+    <div class="nav-links">
+      <div class="nl on" onclick="showPage('pg-map',this)">Карта мира</div>
+      <div class="nl" onclick="showPage('pg-missions',this)">Миссии</div>
+      <div class="nl" onclick="showPage('pg-profile',this)">Прогресс</div>
+      <div class="nl" onclick="showPage('pg-clusters',this)">Кластеры</div>
+    </div>
+    <div class="nav-prof">
+      <div class="nav-avatar">
+        <svg width="22" height="22" viewBox="0 0 22 22">
+          <rect x="3" y="5" width="16" height="13" rx="2" fill="rgba(232,160,48,.28)" stroke="rgba(232,160,48,.55)" stroke-width=".7"/>
+          <rect x="6" y="8" width="10" height="6" rx="1" fill="rgba(4,2,10,.8)"/>
+          <rect x="7" y="9" width="3" height="3" rx=".5" fill="rgba(32,200,160,.9)"/>
+          <rect x="12" y="9" width="3" height="3" rx=".5" fill="rgba(32,200,160,.9)"/>
+          <rect x="9" y="2" width="4" height="5" rx=".8" fill="rgba(232,160,48,.35)"/>
+          <circle cx="11" cy="1.8" r="1.5" fill="rgba(232,80,48,.85)"/>
+        </svg>
+      </div>
+      <span class="f-cin" style="font-size:12px;color:var(--amber);">UNIT-7</span>
+    </div>
+  </nav>
+
+  <div class="p-pages">
+
+    <!-- MAP PAGE -->
+    <div id="pg-map" class="PAGE ON">
+      <div class="map-wrap">
+        <!-- SVG terrain -->
+        <svg class="map-svg" viewBox="0 0 1200 680" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="gir" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"  stop-color="#e8a030" stop-opacity=".22"/>
+              <stop offset="100%" stop-color="#e8a030" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="gru" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"  stop-color="#4080e0" stop-opacity=".1"/>
+              <stop offset="100%" stop-color="#4080e0" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="gin" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"  stop-color="#40e0a0" stop-opacity=".1"/>
+              <stop offset="100%" stop-color="#40e0a0" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- Organic terrain -->
+          <path d="M0 560 Q140 500 300 540 Q480 580 640 505 Q780 440 940 490 Q1080 525 1200 468 L1200 680 L0 680Z" fill="rgba(16,8,2,.65)"/>
+          <path d="M0 620 Q90 595 220 608 Q380 624 520 598 Q660 573 800 606 Q940 634 1080 605 L1200 615 L1200 680 L0 680Z" fill="rgba(28,14,4,.45)"/>
+          <!-- Ground haze -->
+          <ellipse cx="380" cy="555" rx="200" ry="38" fill="rgba(232,160,48,.04)"/>
+          <ellipse cx="830" cy="535" rx="170" ry="30" fill="rgba(232,160,48,.03)"/>
+          <!-- Paths between clusters -->
+          <path d="M380 340 Q530 285 660 325" stroke="rgba(232,160,48,.1)" stroke-width="1.5" fill="none" stroke-dasharray="6 9"/>
+          <path d="M380 340 Q295 250 215 210" stroke="rgba(64,128,224,.08)" stroke-width="1.5" fill="none" stroke-dasharray="6 9"/>
+          <path d="M380 340 Q470 420 590 455" stroke="rgba(64,224,160,.08)" stroke-width="1.5" fill="none" stroke-dasharray="6 9"/>
+          <path d="M380 340 Q560 345 700 270" stroke="rgba(160,64,224,.07)" stroke-width="1.5" fill="none" stroke-dasharray="6 9"/>
+          <path d="M380 340 Q295 415 235 495" stroke="rgba(64,160,224,.07)" stroke-width="1.5" fill="none" stroke-dasharray="6 9"/>
+          <!-- Active cluster glow -->
+          <ellipse cx="380" cy="340" rx="130" ry="85" fill="url(#gir)"/>
+          <ellipse cx="215" cy="195" rx="85" ry="65" fill="url(#gru)" opacity=".5"/>
+          <ellipse cx="590" cy="455" rx="85" ry="65" fill="url(#gin)" opacity=".5"/>
+          <!-- Kanat hint -->
+          <text x="380" y="425" text-anchor="middle" font-family="Lato,sans-serif" font-size="9" fill="rgba(232,160,48,.2)" letter-spacing="3">КАНАЛЫ ДЕШТЕ-ЛУТ</text>
+          <path d="M270 415 Q325 430 380 415 Q435 400 490 415" stroke="rgba(232,160,48,.12)" stroke-width=".8" fill="none"/>
+          <!-- Floating particles -->
+          <circle cx="140" cy="390" r="1.5" fill="rgba(232,160,48,.25)"/>
+          <circle cx="520" cy="290" r="1"   fill="rgba(232,160,48,.2)"/>
+          <circle cx="720" cy="400" r="1.5" fill="rgba(232,160,48,.2)"/>
+          <circle cx="950" cy="340" r="1"   fill="rgba(232,160,48,.18)"/>
+        </svg>
+
+        <!-- CLUSTER NODES -->
+        <!-- IRAN active -->
+        <div class="c-node" style="left:31.7%;top:50%;" onclick="openMP()">
+          <div class="c-orb active">
+            <div class="ring"></div><div class="ring"></div>
+            <svg width="32" height="32" viewBox="0 0 32 32">
+              <rect x="3" y="6" width="26" height="18" rx="3" fill="rgba(4,2,10,.8)" stroke="rgba(250,232,160,.6)" stroke-width=".8"/>
+              <rect x="7" y="10" width="18" height="8" rx="1" fill="rgba(4,2,10,.9)"/>
+              <rect x="8" y="11" width="5" height="5" rx="1" fill="rgba(232,160,48,.9)"/>
+              <rect x="15" y="11" width="5" height="5" rx="1" fill="rgba(232,160,48,.9)"/>
+              <rect x="10" y="2" width="3" height="6" rx=".8" fill="rgba(232,160,48,.4)"/>
+              <rect x="19" y="2" width="3" height="6" rx=".8" fill="rgba(232,160,48,.4)"/>
+              <circle cx="11.5" cy="1.5" r="2" fill="rgba(232,80,48,.9)"/>
+              <circle cx="20.5" cy="1.5" r="2" fill="rgba(32,200,160,.9)"/>
+              <rect x="9" y="24" width="6" height="5" rx="1" fill="rgba(232,160,48,.3)"/>
+              <rect x="17" y="24" width="6" height="5" rx="1" fill="rgba(232,160,48,.3)"/>
+            </svg>
+          </div>
+          <div class="c-label active f-cin">ПУСТЫННЫЙ ГОРИЗОНТ<div class="c-sub">Иран · ОАЭ · Египет</div></div>
+        </div>
+
+        <!-- RUSSIA locked -->
+        <div class="c-node" style="left:17.9%;top:28.7%;">
+          <div class="c-orb locked">
+            <svg width="26" height="26" viewBox="0 0 26 26" opacity=".4">
+              <rect x="3" y="7" width="20" height="14" rx="2" fill="#1a2030" stroke="#304060" stroke-width=".7"/>
+              <path d="M8 21 L8 24 M18 21 L18 24" stroke="#304060" stroke-width="1.5" stroke-linecap="round"/>
+              <rect x="6" y="3" width="14" height="6" rx="1" fill="#1a2030" stroke="#304060" stroke-width=".7"/>
+              <rect x="9" y="10" width="8" height="4" rx="1" fill="#304060"/>
+            </svg>
+          </div>
+          <div class="c-label locked f-cin">АРКТИЧЕСКИЙ ЩИТ<div class="c-sub">Россия · Заблокировано</div></div>
+        </div>
+
+        <!-- INDIA/BRAZIL locked -->
+        <div class="c-node" style="left:49.2%;top:66.9%;">
+          <div class="c-orb locked">
+            <svg width="26" height="26" viewBox="0 0 26 26" opacity=".4">
+              <circle cx="13" cy="13" r="10" fill="#0a1a10" stroke="#204030" stroke-width=".7"/>
+              <path d="M7 13 Q10 9 13 13 Q16 17 19 13" stroke="#204030" stroke-width="1" fill="none"/>
+              <circle cx="13" cy="13" r="3" fill="#204030"/>
+            </svg>
+          </div>
+          <div class="c-label locked f-cin">ТРОПИЧЕСКИЙ ПОЯС<div class="c-sub">Индия · Бразилия · Заблокировано</div></div>
+        </div>
+
+        <!-- CHINA locked -->
+        <div class="c-node" style="left:58.3%;top:39.7%;">
+          <div class="c-orb locked">
+            <svg width="26" height="26" viewBox="0 0 26 26" opacity=".4">
+              <rect x="2" y="2" width="22" height="22" rx="3" fill="#0a0a1a" stroke="#202040" stroke-width=".7"/>
+              <rect x="5" y="9" width="5" height="7" fill="#202040" rx="1"/>
+              <rect x="15" y="5" width="5" height="11" fill="#202040" rx="1"/>
+              <rect x="9" y="13" width="4" height="4" fill="#303060" rx="1"/>
+            </svg>
+          </div>
+          <div class="c-label locked f-cin">МЕГАПОЛИС БУДУЩЕГО<div class="c-sub">Китай · Заблокировано</div></div>
+        </div>
+
+        <!-- AFRICA locked -->
+        <div class="c-node" style="left:20%;top:72.8%;">
+          <div class="c-orb locked">
+            <svg width="26" height="26" viewBox="0 0 26 26" opacity=".4">
+              <ellipse cx="13" cy="17" rx="9" ry="7" fill="#0a1218" stroke="#182030" stroke-width=".7"/>
+              <ellipse cx="13" cy="9"  rx="6" ry="4" fill="#0a1218" stroke="#182030" stroke-width=".7"/>
+              <circle  cx="13" cy="13" r="3"          fill="#182030"/>
+            </svg>
+          </div>
+          <div class="c-label locked f-cin">ОКЕАНИЧЕСКИЙ РУБЕЖ<div class="c-sub">ЮАР · Заблокировано</div></div>
+        </div>
+
+        <!-- MISSION PANEL -->
+        <div class="mp" id="mp">
+          <div class="mp-close" onclick="closeMP()">✕</div>
+          <div class="mp-hd">
+            <div class="mp-tag">◈ Активная миссия · Сезон I</div>
+            <div class="mp-title f-cin">Кризис Деште-Лут</div>
+          </div>
+          <div class="mp-body">
+            <div class="mp-desc">Система мониторинга канатов провинции Йезд дала критический отказ. Спроектируй автономного дрона для тоннеля К-7. Навигация без GPS, температура +58°C.</div>
+            <div class="mp-grid">
+              <div class="mp-p"><div class="mp-pl">Бюджет</div><div class="mp-pv f-cin">12 000 ¤</div></div>
+              <div class="mp-p"><div class="mp-pl">Температура</div><div class="mp-pv f-cin d">+58°C</div></div>
+              <div class="mp-p"><div class="mp-pl">Автономность</div><div class="mp-pv f-cin">≥ 4 часа</div></div>
+              <div class="mp-p"><div class="mp-pl">Надёжность</div><div class="mp-pv f-cin">≥ 95%</div></div>
+            </div>
+            <div class="mp-reqs">
+              <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--txt2);margin-bottom:10px;">Требования</div>
+              <div class="mp-req"><div class="orb-sm ok"></div>Кластер: Пустынный горизонт</div>
+              <div class="mp-req"><div class="orb-sm ok"></div>Аккаунт платформы</div>
+              <div class="mp-req"><div class="orb-sm"></div>Сертификат ISIRI</div>
+              <div class="mp-req"><div class="orb-sm"></div>Автономная навигация</div>
+            </div>
+            <button class="mp-cta f-cin" onclick="startMission()">Начать миссию →</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /pg-map -->
+
+    <!-- MISSIONS PAGE -->
+    <div id="pg-missions" class="PAGE">
+      <div style="padding:36px;">
+        <div class="sec-hd">Доступные миссии</div>
+        <div class="miss-grid">
+          <div class="miss-card active-card" onclick="startMission()">
+            <div class="mc-tag live">● Активная · Сезон I</div>
+            <div class="mc-name f-cin">Дрон-инспектор К-7</div>
+            <div class="mc-desc">Спроектируй автономного дрона для мониторинга подземного акведука. +58°C, навигация без GPS.</div>
+            <div class="mc-tags"><span class="tag">Робототехника</span><span class="tag">ISIRI</span><span class="tag">Иран</span></div>
+          </div>
+          <div class="miss-card locked-card">
+            <div class="mc-tag lock">○ Заблокировано · Акт II</div>
+            <div class="mc-name f-cin">Три повреждённые секции</div>
+            <div class="mc-desc">Межкластерная кооперация. Требуется завершить Акт I.</div>
+            <div class="mc-tags"><span class="tag" style="opacity:.4">Кооперация</span><span class="tag" style="opacity:.4">БРИКС+</span></div>
+          </div>
+          <div class="miss-card locked-card">
+            <div class="mc-tag lock">○ Заблокировано · Акт III</div>
+            <div class="mc-name f-cin">Ночь пустыни</div>
+            <div class="mc-desc">72-часовой финальный марафон. Все пять кластеров.</div>
+            <div class="mc-tags"><span class="tag" style="opacity:.4">Финал</span><span class="tag" style="opacity:.4">Все кластеры</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="pg-profile" class="PAGE">
+      <div style="padding:36px;">
+        <div class="prof-hero">
+          <div class="prof-avatar">🤖</div>
+          <div>
+            <div class="prof-name f-cin">UNIT-7</div>
+            <div class="prof-level">Стажёр · Пустынный горизонт</div>
+            <div class="xp-bar-w"><div class="xp-bar"></div></div>
+            <div class="xp-txt">680 / 1000 XP до уровня «Инженер»</div>
+          </div>
+        </div>
+        <div class="sec-hd">Достижения</div>
+        <div class="ach-grid">
+          <div class="ach"><div class="ach-ico">🏅</div><div class="ach-name f-cin">Первый запуск</div><div class="ach-desc">Первый испытательный тест пройден</div></div>
+          <div class="ach"><div class="ach-ico">🧭</div><div class="ach-name f-cin">GPS-независимость</div><div class="ach-desc">Установлена инерциальная навигация</div></div>
+          <div class="ach ach-lock"><div class="ach-ico">🔒</div><div class="ach-name f-cin">Кооператор</div><div class="ach-desc">Завершена межкластерная миссия</div></div>
+          <div class="ach ach-lock"><div class="ach-ico">🔒</div><div class="ach-name f-cin">Ночь пустыни</div><div class="ach-desc">Финальный марафон Акта III</div></div>
+          <div class="ach ach-lock"><div class="ach-ico">🔒</div><div class="ach-name f-cin">Talent Bridge</div><div class="ach-desc">Профиль принят рекрутером</div></div>
+          <div class="ach ach-lock"><div class="ach-ico">🔒</div><div class="ach-name f-cin">Мастер ISIRI</div><div class="ach-desc">5 миссий с полной сертификацией</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLUSTERS PAGE -->
+    <div id="pg-clusters" class="PAGE">
+      <div style="padding:36px;">
+        <div class="sec-hd">Кластеры RobodexBRICS</div>
+        <div class="cl-grid">
+          <div class="cl-card"><div class="cl-name f-cin" style="color:var(--amber);">🏜️ Пустынный горизонт</div><div class="cl-sub">Иран · ОАЭ · Египет · АКТИВЕН</div><div class="cl-desc">Солнечная энергетика, водосбережение, нефтегазовая диагностика. Уникальный ресурс: термостойкие сплавы, навигация в условиях песчаных бурь.</div></div>
+          <div class="cl-card" style="opacity:.5;"><div class="cl-name f-cin" style="color:#6090d0;">❄️ Арктический щит</div><div class="cl-sub">Россия · Заблокировано до Акта II</div><div class="cl-desc">Криостойкие композиты, навигация в полярную ночь. Автономные системы для вечной мерзлоты.</div></div>
+          <div class="cl-card" style="opacity:.5;"><div class="cl-name f-cin" style="color:#40d090;">🌿 Тропический пояс</div><div class="cl-sub">Индия · Бразилия · Заблокировано</div><div class="cl-desc">Биоаккумуляторы, алгоритмы распознавания болезней растений. Сельскохозяйственные роботы.</div></div>
+          <div class="cl-card" style="opacity:.5;"><div class="cl-name f-cin" style="color:#a070d0;">🌆 Мегаполис будущего</div><div class="cl-sub">Китай · Индия · Заблокировано</div><div class="cl-desc">Нейросети компьютерного зрения, компактные аккумуляторы. Городская логистика, рои дронов.</div></div>
+          <div class="cl-card" style="opacity:.5;"><div class="cl-name f-cin" style="color:#40a0d0;">🌊 Океанический рубеж</div><div class="cl-sub">ЮАР · Побережье · Заблокировано</div><div class="cl-desc">Гидроакустика, датчики давления, биоразлагаемые материалы. Подводные аппараты.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /p-pages -->
+</div><!-- /s-plat -->
+
+<!-- ==================== GAME ==================== -->
+<div id="s-game" class="SCR">
+  <!-- header -->
+  <div class="gh">
+    <div class="gh-back" onclick="showScreen('s-plat')">← RobodexBRICS</div>
+    <div class="gh-title f-cin">Миссия: Тоннель К-7</div>
+    <div class="gh-stats">
+      <div class="ghs"><span class="ghs-l">Надёжн.</span><span class="ghs-v f-cin" id="hs-r">—</span></div>
+      <div class="ghs"><span class="ghs-l">Автоном.</span><span class="ghs-v f-cin" id="hs-a">—</span></div>
+    </div>
+  </div>
+
+  <!-- sidebar -->
+  <div class="gsb">
+    <div class="gsb-s">
+      <div class="gsb-t">Миссия</div>
+      <div class="mc-sm">
+        <div class="mcs-n f-cin">Дрон-инспектор К-7</div>
+        <div class="mcs-d">Авт. мониторинг акведука. Без GPS. +58°C.</div>
+        <div class="mcs-g">
+          <div class="mcs-p"><div class="mcs-pl">Бюджет</div><div class="mcs-pv f-cin" id="bsb">0¤</div></div>
+          <div class="mcs-p"><div class="mcs-pl">Темп.</div><div class="mcs-pv f-cin d">+58°C</div></div>
+          <div class="mcs-p"><div class="mcs-pl">Автоном.</div><div class="mcs-pv f-cin">≥ 4ч</div></div>
+          <div class="mcs-p"><div class="mcs-pl">Надёжн.</div><div class="mcs-pv f-cin">≥ 95%</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="gsb-s">
+      <div class="gsb-t">Требования</div>
+      <div class="req"><div class="req-led" id="r-f"></div>Корпус ≥ 60°C</div>
+      <div class="req"><div class="req-led" id="r-n"></div>Навигация без GPS</div>
+      <div class="req"><div class="req-led" id="r-b"></div>Батарея ≥ 4 часа</div>
+      <div class="req"><div class="req-led" id="r-s"></div>Сенсор тоннеля</div>
+      <div class="req"><div class="req-led" id="r-i"></div>Все компоненты ISIRI</div>
+    </div>
+    <div class="gsb-s" style="flex:1;overflow-y:auto;">
+      <div class="gsb-t">Компоненты</div>
+      <div id="clist"></div>
+    </div>
+  </div>
+
+  <!-- main -->
+  <div class="gm">
+    <div class="g-tabs">
+      <button class="g-tab on" onclick="stab('build')">Сборка</button>
+      <button class="g-tab" onclick="stab('log')">Журнал</button>
+      <button class="g-tab" onclick="stab('test')">Испытания</button>
+    </div>
+
+    <!-- BUILD -->
+    <div id="tab-build" class="g-tc on">
+      <div class="build-wrap">
+        <div class="build-hint">Нажми на слот · выбери компонент</div>
+        <div class="drone-scene">
+          <svg viewBox="0 0 560 400">
+            <defs>
+              <radialGradient id="dg" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(232,160,48,.14)"/>
+                <stop offset="100%" stop-color="transparent"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="290" cy="208" rx="120" ry="65" fill="url(#dg)"/>
+            <!-- Arms -->
+            <line x1="206" y1="182" x2="86"  y2="116" stroke="rgba(107,66,24,.9)" stroke-width="9" stroke-linecap="round"/>
+            <line x1="374" y1="182" x2="494" y2="116" stroke="rgba(107,66,24,.9)" stroke-width="9" stroke-linecap="round"/>
+            <line x1="206" y1="228" x2="86"  y2="294" stroke="rgba(107,66,24,.9)" stroke-width="9" stroke-linecap="round"/>
+            <line x1="374" y1="228" x2="494" y2="294" stroke="rgba(107,66,24,.9)" stroke-width="9" stroke-linecap="round"/>
+            <line x1="206" y1="179" x2="86"  y2="113" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <line x1="374" y1="179" x2="494" y2="113" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <line x1="206" y1="225" x2="86"  y2="291" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <line x1="374" y1="225" x2="494" y2="291" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <!-- Motor pods -->
+            <circle cx="86"  cy="116" r="27" fill="rgba(18,10,2,.96)" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <circle cx="494" cy="116" r="27" fill="rgba(18,10,2,.96)" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <circle cx="86"  cy="294" r="27" fill="rgba(18,10,2,.96)" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <circle cx="494" cy="294" r="27" fill="rgba(18,10,2,.96)" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <!-- Propellers -->
+            <g id="pfl" style="transform-origin:86px 116px"><ellipse cx="86" cy="116" rx="32" ry="5" fill="rgba(232,160,48,.22)" stroke="rgba(232,160,48,.38)" stroke-width=".5"/><ellipse cx="86" cy="116" rx="5" ry="32" fill="rgba(232,160,48,.14)" stroke="rgba(232,160,48,.28)" stroke-width=".5"/></g>
+            <g id="pfr" style="transform-origin:494px 116px"><ellipse cx="494" cy="116" rx="32" ry="5" fill="rgba(232,160,48,.22)" stroke="rgba(232,160,48,.38)" stroke-width=".5"/><ellipse cx="494" cy="116" rx="5" ry="32" fill="rgba(232,160,48,.14)" stroke="rgba(232,160,48,.28)" stroke-width=".5"/></g>
+            <g id="prl" style="transform-origin:86px 294px"><ellipse cx="86" cy="294" rx="32" ry="5" fill="rgba(232,160,48,.22)" stroke="rgba(232,160,48,.38)" stroke-width=".5"/><ellipse cx="86" cy="294" rx="5" ry="32" fill="rgba(232,160,48,.14)" stroke="rgba(232,160,48,.28)" stroke-width=".5"/></g>
+            <g id="prr" style="transform-origin:494px 294px"><ellipse cx="494" cy="294" rx="32" ry="5" fill="rgba(232,160,48,.22)" stroke="rgba(232,160,48,.38)" stroke-width=".5"/><ellipse cx="494" cy="294" rx="5" ry="32" fill="rgba(232,160,48,.14)" stroke="rgba(232,160,48,.28)" stroke-width=".5"/></g>
+            <!-- Body -->
+            <rect x="180" y="152" width="220" height="108" rx="7" fill="rgba(10,6,20,.96)" stroke="rgba(232,160,48,.18)" stroke-width="1.5"/>
+            <rect x="188" y="160" width="204" height="92"  rx="5" fill="rgba(6,4,12,.96)" stroke="rgba(232,160,48,.06)" stroke-width="1"/>
+            <!-- Ornament -->
+            <polygon points="290,172 312,205 290,238 268,205" fill="none" stroke="rgba(232,160,48,.1)" stroke-width="1"/>
+            <circle cx="290" cy="205" r="5.5" fill="rgba(232,160,48,.07)" stroke="rgba(232,160,48,.22)" stroke-width=".8"/>
+            <circle cx="290" cy="205" r="2"   fill="rgba(250,232,160,.55)"/>
+            <line x1="200" y1="199" x2="270" y2="199" stroke="rgba(232,160,48,.07)" stroke-width=".5"/>
+            <line x1="310" y1="199" x2="380" y2="199" stroke="rgba(232,160,48,.07)" stroke-width=".5"/>
+            <!-- LEDs -->
+            <rect id="L1" x="197" y="168" width="5" height="5" rx="1" fill="rgba(32,200,160,.25)"/>
+            <rect id="L2" x="206" y="168" width="5" height="5" rx="1" fill="rgba(32,200,160,.25)"/>
+            <rect id="L3" x="215" y="168" width="5" height="5" rx="1" fill="rgba(232,160,48,.18)"/>
+            <rect id="L4" x="224" y="168" width="5" height="5" rx="1" fill="rgba(232,160,48,.18)"/>
+            <rect id="L5" x="233" y="168" width="5" height="5" rx="1" fill="rgba(232,80,48,.18)"/>
+            <!-- Connector dashes -->
+            <line x1="180" y1="206" x2="140" y2="206" stroke="rgba(232,160,48,.09)" stroke-width="1" stroke-dasharray="4 5"/>
+            <line x1="400" y1="206" x2="440" y2="206" stroke="rgba(232,160,48,.09)" stroke-width="1" stroke-dasharray="4 5"/>
+            <line x1="290" y1="152" x2="290" y2="102" stroke="rgba(232,160,48,.09)" stroke-width="1" stroke-dasharray="4 5"/>
+            <line x1="290" y1="260" x2="290" y2="310" stroke="rgba(232,160,48,.09)" stroke-width="1" stroke-dasharray="4 5"/>
+            <line x1="398" y1="246" x2="480" y2="326" stroke="rgba(232,160,48,.07)" stroke-width="1" stroke-dasharray="4 5"/>
+          </svg>
+          <!-- Slots -->
+          <div class="bslot" style="left:16px;top:70px;"  onclick="openSlot('motor-fl','Двигатель ЛП','motor')"><div class="slot-g" id="sg-motor-fl"><div class="slot-shape"><span id="si-motor-fl">⚙️</span></div><div class="slot-lbl" id="sn-motor-fl">Двиг ЛП</div></div></div>
+          <div class="bslot" style="right:16px;top:70px;" onclick="openSlot('motor-fr','Двигатель ПП','motor')"><div class="slot-g" id="sg-motor-fr"><div class="slot-shape"><span id="si-motor-fr">⚙️</span></div><div class="slot-lbl" id="sn-motor-fr">Двиг ПП</div></div></div>
+          <div class="bslot" style="left:16px;bottom:54px;" onclick="openSlot('motor-rl','Двигатель ЛЗ','motor')"><div class="slot-g" id="sg-motor-rl"><div class="slot-shape"><span id="si-motor-rl">⚙️</span></div><div class="slot-lbl" id="sn-motor-rl">Двиг ЛЗ</div></div></div>
+          <div class="bslot" style="right:16px;bottom:54px;" onclick="openSlot('motor-rr','Двигатель ПЗ','motor')"><div class="slot-g" id="sg-motor-rr"><div class="slot-shape"><span id="si-motor-rr">⚙️</span></div><div class="slot-lbl" id="sn-motor-rr">Двиг ПЗ</div></div></div>
+          <div class="bslot" style="left:50%;top:18px;transform:translateX(-50%);" onclick="openSlot('nav','Навигация','nav')"><div class="slot-g" id="sg-nav"><div class="slot-shape"><span id="si-nav">🧭</span></div><div class="slot-lbl" id="sn-nav">Навигация</div></div></div>
+          <div class="bslot" style="left:50%;bottom:18px;transform:translateX(-50%);" onclick="openSlot('battery','Батарея','battery')"><div class="slot-g" id="sg-battery"><div class="slot-shape"><span id="si-battery">🔋</span></div><div class="slot-lbl" id="sn-battery">Батарея</div></div></div>
+          <div class="bslot" style="left:42px;top:50%;transform:translateY(-50%);" onclick="openSlot('frame','Корпус','frame')"><div class="slot-g" id="sg-frame"><div class="slot-shape"><span id="si-frame">🔩</span></div><div class="slot-lbl" id="sn-frame">Корпус</div></div></div>
+          <div class="bslot" style="right:42px;top:50%;transform:translateY(-50%);" onclick="openSlot('sensor','Сенсор','sensor')"><div class="slot-g" id="sg-sensor"><div class="slot-shape"><span id="si-sensor">📡</span></div><div class="slot-lbl" id="sn-sensor">Сенсор</div></div></div>
+          <div class="bslot" style="right:14px;bottom:14px;" onclick="openSlot('ai','ИИ-модуль','ai')"><div class="slot-g" id="sg-ai"><div class="slot-shape" style="width:52px;height:46px;"><span id="si-ai">🧠</span></div><div class="slot-lbl" id="sn-ai">ИИ</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div id="tab-log" class="g-tc"><div class="log-wrap" id="logwrap"></div></div>
+
+    <!-- TEST -->
+    <div id="tab-test" class="g-tc">
+      <div class="test-wrap">
+        <div class="test-hrow">
+          <div><div class="test-t f-cin">Испытательный стенд</div><div class="test-s">Тоннель К-7 · +58°C · без GPS</div></div>
+          <button class="btn btn-pri" onclick="runTest()">Запустить испытание</button>
+        </div>
+        <div id="tres"></div>
+      </div>
+    </div>
+  </div><!-- /gm -->
+
+  <!-- status bar -->
+  <div class="g-sb2">
+    <div class="btrack">
+      <span class="btrack-l">Бюджет</span>
+      <div class="baro"><div class="bari" id="bbar" style="width:0%"></div></div>
+      <span class="bnum f-cin" id="bnum">0 / 12 000 ¤</span>
+    </div>
+    <div class="sb-btns">
+      <button class="btn btn-ghost" onclick="resetBuild()">Сбросить</button>
+      <button class="btn btn-pri"   onclick="submitBuild()">Отправить решение</button>
+    </div>
+  </div>
+</div><!-- /s-game -->
+
+<!-- SLOT MODAL -->
+<div class="modal-ov hid" id="slot-modal">
+  <div class="modal-box">
+    <div class="modal-t f-cin" id="sm-title">Выбор компонента</div>
+    <div id="sm-body"></div>
+    <div style="margin-top:16px;"><button class="btn btn-ghost" onclick="closeModal('slot-modal')">Закрыть</button></div>
+  </div>
+</div>
+
+<!-- RESULT MODAL -->
+<div class="modal-ov hid" id="res-modal">
+  <div class="modal-box">
+    <div id="res-body"></div>
+    <div style="margin-top:20px;"><button class="btn btn-pri" onclick="closeModal('res-modal')">Продолжить</button></div>
+  </div>
+</div>
+
+<script>
+/* ========================================================
+   BACKGROUND CANVAS — Ori desert atmosphere
+   ======================================================== */
+(function(){
+  const bg = document.getElementById('bg-canvas');
+  const pc = document.getElementById('pt-canvas');
+  let W,H;
+
+  function resize(){
+    W = bg.width = pc.width = window.innerWidth;
+    H = bg.height = pc.height = window.innerHeight;
+    drawBg();
+  }
+
+  function drawBg(){
+    const c = bg.getContext('2d');
+    c.clearRect(0,0,W,H);
+    // Sky
+    const sky = c.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,   '#04020a');
+    sky.addColorStop(0.45,'#080514');
+    sky.addColorStop(0.75,'#0d0608');
+    sky.addColorStop(1,   '#1a0e04');
+    c.fillStyle = sky; c.fillRect(0,0,W,H);
+    // Warm horizon glow
+    const hg = c.createRadialGradient(W/2,H*.72,0, W/2,H*.72,W*.65);
+    hg.addColorStop(0,'rgba(232,120,32,.17)');
+    hg.addColorStop(0.4,'rgba(180,80,16,.07)');
+    hg.addColorStop(1,'transparent');
+    c.fillStyle=hg; c.fillRect(0,0,W,H);
+    // Side accent
+    const sg = c.createRadialGradient(W*.18,H*.5,0, W*.18,H*.5,W*.38);
+    sg.addColorStop(0,'rgba(208,104,32,.06)');
+    sg.addColorStop(1,'transparent');
+    c.fillStyle=sg; c.fillRect(0,0,W,H);
+    // Organic dune silhouettes
+    c.fillStyle='rgba(14,6,2,.7)';
+    c.beginPath();
+    c.moveTo(0,H); c.bezierCurveTo(W*.12,H*.77,W*.26,H*.71,W*.42,H*.78);
+    c.bezierCurveTo(W*.57,H*.85,W*.67,H*.67,W*.82,H*.74);
+    c.bezierCurveTo(W*.91,H*.79,W*.97,H*.75,W,H*.77); c.lineTo(W,H); c.closePath(); c.fill();
+    c.fillStyle='rgba(24,12,4,.5)';
+    c.beginPath();
+    c.moveTo(0,H); c.bezierCurveTo(W*.08,H*.87,W*.19,H*.84,W*.33,H*.88);
+    c.bezierCurveTo(W*.48,H*.92,W*.58,H*.83,W*.72,H*.87);
+    c.bezierCurveTo(W*.85,H*.91,W*.94,H*.86,W,H*.88); c.lineTo(W,H); c.closePath(); c.fill();
+    // Ground strip
+    c.fillStyle='rgba(40,24,8,.4)'; c.fillRect(0,H*.91,W,H*.09);
+    c.fillStyle='rgba(55,34,10,.3)'; c.fillRect(0,H*.95,W,H*.05);
+    // Stars
+    [[.07,.06],[.21,.04],[.36,.09],[.5,.03],[.63,.07],[.75,.05],[.88,.1],[.14,.13],[.41,.16],[.69,.12],[.92,.15]].forEach(([x,y])=>{
+      const g = c.createRadialGradient(x*W,y*H,0,x*W,y*H,2.5);
+      g.addColorStop(0,'rgba(250,232,160,.75)');
+      g.addColorStop(1,'transparent');
+      c.fillStyle=g; c.beginPath(); c.arc(x*W,y*H,1.5,0,Math.PI*2); c.fill();
+    });
+  }
+
+  // Particles
+  const COLS = ['232,160,48','250,232,160','208,104,32','32,200,160'];
+  const P = [];
+  function initP(){
+    for(let i=0;i<55;i++) P.push(mkP(W,H,true));
+  }
+  function mkP(W,H,rand){
+    return{
+      x:Math.random()*W, y:rand?Math.random()*H:H*(0.7+Math.random()*.3),
+      r:Math.random()*2.2+.5,
+      vx:(Math.random()-.5)*.28, vy:-Math.random()*.38-.1,
+      life:rand?Math.random():0,
+      ml:Math.random()*.35+.28,
+      col:COLS[Math.floor(Math.random()*COLS.length)],
+      a:Math.random()*.45+.1
+    };
+  }
+  function animP(){
+    const c=pc.getContext('2d');
+    c.clearRect(0,0,W,H);
+    P.forEach((p,i)=>{
+      p.x+=p.vx; p.y+=p.vy; p.life+=.0025;
+      const fade=Math.sin(p.life*Math.PI/p.ml);
+      const a=p.a*Math.max(0,fade);
+      // Glow
+      const g=c.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+      g.addColorStop(0,`rgba(${p.col},${(a*.6).toFixed(2)})`);
+      g.addColorStop(.3,`rgba(${p.col},${(a*.25).toFixed(2)})`);
+      g.addColorStop(1,'transparent');
+      c.fillStyle=g; c.beginPath(); c.arc(p.x,p.y,p.r*4,0,Math.PI*2); c.fill();
+      // Core
+      c.fillStyle=`rgba(255,255,255,${(a*.85).toFixed(2)})`;
+      c.beginPath(); c.arc(p.x,p.y,p.r*.35,0,Math.PI*2); c.fill();
+      if(p.life>=p.ml||p.y<-8) P[i]=mkP(W,H,false);
+    });
+    requestAnimationFrame(animP);
+  }
+  window.addEventListener('resize',resize);
+  resize(); initP(); animP();
+})();
+
+/* ========================================================
+   SCREEN / PAGE NAVIGATION
+   ======================================================== */
+function showScreen(id){
+  document.querySelectorAll('.SCR').forEach(s=>{
+    s.classList.remove('ON');
+    s.style.display='';
+  });
+  const el=document.getElementById(id);
+  el.classList.add('ON');
+  // game needs grid display
+  if(id==='s-game') el.style.display='grid';
+}
+
+function showPage(id,btn){
+  document.querySelectorAll('.PAGE').forEach(p=>p.classList.remove('ON'));
+  document.getElementById(id).classList.add('ON');
+  document.querySelectorAll('.nl').forEach(n=>n.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+}
+
+function openMP(){ document.getElementById('mp').classList.add('open'); }
+function closeMP(){ document.getElementById('mp').classList.remove('open'); }
+
+function startMission(){
+  closeMP();
+  showScreen('s-game');
+  initLog(); renderCList(); updUI(); animProps();
+}
+
+/* ========================================================
+   GAME DATA
+   ======================================================== */
+const BMAX=12000;
+const COMPS=[
+  {id:'fr-ti',name:'Ti-Desert Mk.II',  type:'frame',  icon:'🔩',cost:2200,maxTemp:75,isiri:true, gps:null, hrs:null,acc:null,origin:'local',
+   desc:'Титановый сплав с термобарьерным покрытием. Для экстремальных условий пустыни Лут.',
+   stats:{'Макс. темп.':'75°C','Масса':'1.2 кг','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'fr-cb',name:'Углеродный Mk.I',  type:'frame',  icon:'🔩',cost:1400,maxTemp:55,isiri:false,gps:null, hrs:null,acc:null,origin:'import',
+   desc:'Лёгкий углекомпозит. Недостаточная термостойкость для +58°C.',
+   stats:{'Макс. темп.':'55°C','Масса':'0.8 кг','ISIRI':'✗','Источник':'ИМПОРТ'}},
+  {id:'fr-st',name:'Стальной Desert',  type:'frame',  icon:'🔩',cost:900, maxTemp:80,isiri:true, gps:null, hrs:null,acc:null,origin:'local',
+   desc:'Нержавеющая сталь. Тяжёлый, выдерживает высокие температуры.',
+   stats:{'Макс. темп.':'80°C','Масса':'2.1 кг','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'nv-ins',name:'ИНС-Лут Pro',     type:'nav',    icon:'🧭',cost:2800,maxTemp:null,isiri:true, gps:false,hrs:null,acc:1.8,origin:'local',
+   desc:'Инерциальная навигация иранского производства. Без GPS. Стандарт для закрытых объектов.',
+   stats:{'Точность':'±1.8 м','GPS':'НЕТ','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'nv-gps',name:'GPS-модуль X200', type:'nav',    icon:'🧭',cost:800, maxTemp:null,isiri:false,gps:true, hrs:null,acc:3.0,origin:'import',
+   desc:'Стандартный GPS. Теряет сигнал в тоннеле — не подходит.',
+   stats:{'Точность':'±3.0 м','GPS':'ДА','ISIRI':'✗','Источник':'ИМПОРТ'}},
+  {id:'nv-lid',name:'LiDAR-Картограф', type:'nav',    icon:'🧭',cost:3500,maxTemp:null,isiri:true, gps:false,hrs:null,acc:0.3,origin:'local',
+   desc:'Лазерная картография + локализация. Строит карту тоннеля в реальном времени.',
+   stats:{'Точность':'±0.3 м','GPS':'НЕТ','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'bt-lfp',name:'LiFePO4 Desert',  type:'battery',icon:'🔋',cost:1600,maxTemp:65,isiri:true, gps:null, hrs:4.5,acc:null,origin:'local',
+   desc:'Литий-железофосфат с термостабилизацией. 4.5 ч при +60°C.',
+   stats:{'Автономность':'4.5 ч','Макс. темп.':'65°C','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'bt-li', name:'Компакт Li-Ion',  type:'battery',icon:'🔋',cost:700, maxTemp:45,isiri:false,gps:null, hrs:2.1,acc:null,origin:'import',
+   desc:'Стандартный Li-Ion. Мало ёмкости. Деградирует в жару.',
+   stats:{'Автономность':'2.1 ч','Макс. темп.':'45°C','ISIRI':'✗','Источник':'ИМПОРТ'}},
+  {id:'bt-hy', name:'Гибрид+Солнечная',type:'battery',icon:'🔋',cost:2400,maxTemp:70,isiri:true, gps:null, hrs:5.0,acc:null,origin:'local',
+   desc:'Литий + фотоэлементы. В тоннеле панели неактивны, но базовой ёмкости хватает.',
+   stats:{'Автономность':'5.0 ч','Макс. темп.':'70°C','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'sn-ac', name:'Акустический Зонд',type:'sensor',icon:'📡',cost:1800,maxTemp:null,isiri:true, gps:null, hrs:null,acc:null,origin:'local',
+   desc:'Ультразвуковой датчик трещин и деформаций. Эффективен при запылённости.',
+   stats:{'Тип':'Ультразвук','Точность':'95%','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'sn-cm', name:'Видеокамера 4K',  type:'sensor',icon:'📡',cost:1200,maxTemp:null,isiri:false,gps:null, hrs:null,acc:null,origin:'import',
+   desc:'Высокое разрешение, снижается в темноте и пыли.',
+   stats:{'Тип':'Видео','Точность':'70%','ISIRI':'✗','Источник':'ИМПОРТ'}},
+  {id:'sn-mx', name:'Мультисенсор MX-3',type:'sensor',icon:'📡',cost:2600,maxTemp:null,isiri:true, gps:null, hrs:null,acc:null,origin:'local',
+   desc:'УЗ + влажность + температура + газ. Комплексный мониторинг.',
+   stats:{'Тип':'Мультисенсор','Точность':'98%','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'mt-ds', name:'HT-Desert Мотор', type:'motor',icon:'⚙️',cost:480, maxTemp:70,isiri:true, gps:null, hrs:null,acc:null,origin:'local',
+   desc:'Высокотемпературный мотор. Без потери мощности до +70°C.',
+   stats:{'Макс. темп.':'70°C','КПД':'88%','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'mt-st', name:'Стандарт Мотор',  type:'motor',icon:'⚙️',cost:220, maxTemp:45,isiri:false,gps:null, hrs:null,acc:null,origin:'import',
+   desc:'Обычный мотор. Перегревается выше +45°C.',
+   stats:{'Макс. темп.':'45°C','КПД':'82%','ISIRI':'✗','Источник':'ИМПОРТ'}},
+  {id:'ai-bs', name:'Базовый контроллер',type:'ai',icon:'🧠',cost:600, maxTemp:null,isiri:true, gps:null, hrs:null,acc:null,origin:'local',
+   desc:'Детерминированная логика. Достаточно для базовых манёвров.',
+   stats:{'Тип':'Детерминированный','Адаптация':'Низкая','ISIRI':'✓','Источник':'ИРАН'}},
+  {id:'ai-nn', name:'Нейросеть НС-М1', type:'ai',icon:'🧠',cost:1800,maxTemp:null,isiri:true, gps:null, hrs:null,acc:null,origin:'local',
+   desc:'Адаптивный ИИ от Нейры (Тамилнад). ≤40% ресурсов процессора.',
+   stats:{'Тип':'Нейросеть','Адаптация':'Высокая','ISIRI':'✓','Источник':'ИРАН'}},
+];
+const TL={frame:'Корпус',nav:'Навигация',battery:'Батарея',sensor:'Сенсор',motor:'Двигатель',ai:'ИИ'};
+let build={}, propAnim=null;
+
+/* ========================================================
+   PROPELLERS
+   ======================================================== */
+let pa=0;
+function animProps(){
+  if(propAnim) cancelAnimationFrame(propAnim);
+  function step(){
+    pa+=13;
+    ['pfl','pfr','prl','prr'].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      if(el) el.style.transform=`rotate(${pa+i*45}deg)`;
+    });
+    const t=Date.now();
+    for(let i=1;i<=5;i++){
+      const el=document.getElementById('L'+i);
+      if(!el) continue;
+      const on=i<=(Math.floor(t/280)%5)+1;
+      el.setAttribute('fill',on?'rgba(32,200,160,.85)':'rgba(32,200,160,.12)');
+    }
+    propAnim=requestAnimationFrame(step);
+  }
+  step();
+}
+
+/* ========================================================
+   COMPONENT LIST
+   ======================================================== */
+function renderCList(){
+  let h='';
+  ['frame','nav','battery','sensor','motor','ai'].forEach(type=>{
+    h+=`<div class="comp-tl">${TL[type]}</div>`;
+    COMPS.filter(c=>c.type===type).forEach(c=>{
+      const inB=Object.values(build).includes(c.id);
+      h+=`<div class="comp-r ${inB?'inb':''}" onclick="openSlot('${type}','${c.name}','${type}')">
+        <span class="comp-r-ico">${c.icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div class="comp-r-n">${c.name}</div>
+          <div class="comp-r-s">${c.isiri?'ISIRI':'Импорт'} · ${c.origin==='local'?'Иран':'Зарубеж'}</div>
+        </div>
+        <span class="comp-r-c f-cin">${c.cost}¤</span>
+      </div>`;
+    });
+  });
+  document.getElementById('clist').innerHTML=h;
+}
+
+/* ========================================================
+   SLOT MODAL
+   ======================================================== */
+function openSlot(slotId,slotName,slotType){
+  document.getElementById('sm-title').textContent=slotName;
+  let h='';
+  COMPS.filter(c=>c.type===slotType).forEach(c=>{
+    const sel=build[slotId]===c.id;
+    const badges=(c.isiri?'<span class="badge b-is">ISIRI</span>':'<span class="badge b-im">Импорт</span>')
+                +(c.origin==='local'?'<span class="badge b-lc">Иран</span>':'');
+    const stats=Object.entries(c.stats).map(([k,v])=>
+      `<div class="cs"><div class="cs-l">${k}</div>
+       <div class="cs-v ${v==='✓'||v==='НЕТ'?'g':v==='✗'||v==='ДА'?'b':''}">${v}</div></div>`
+    ).join('');
+    h+=`<div class="cmi ${sel?'sel':''}">
+      <div class="cmi-top">
+        <div class="cmi-name f-cin">${c.icon} ${c.name}</div>
+        <div class="cmi-badges">${badges}</div>
+      </div>
+      <div class="cmi-desc">${c.desc}</div>
+      <div class="cmi-stats">${stats}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        ${sel
+          ?`<button class="btn btn-ghost" onclick="rmComp('${slotId}')">Снять</button>
+            <span style="font-size:11px;color:var(--teal);">✓ Установлен</span>`
+          :`<button class="btn btn-pri" onclick="instComp('${slotId}','${c.id}')">Установить · ${c.cost}¤</button>`}
+      </div>
+    </div>`;
+  });
+  document.getElementById('sm-body').innerHTML=h;
+  document.getElementById('slot-modal').classList.remove('hid');
+}
+
+function instComp(slotId,compId){
+  const comp=COMPS.find(c=>c.id===compId);
+  const prev=build[slotId]?COMPS.find(c=>c.id===build[slotId]):null;
+  if(totalCost()-(prev?prev.cost:0)+comp.cost>BMAX){
+    const b=document.getElementById('sm-body');
+    if(!b.querySelector('.warn-msg')){
+      const w=document.createElement('div');w.className='warn-msg';
+      w.style.cssText='font-size:12px;color:#e85030;border:1px solid rgba(232,80,48,.25);background:rgba(232,80,48,.04);padding:9px 12px;border-radius:3px;margin-bottom:12px;';
+      w.textContent='Недостаточно бюджета. Снимите другой компонент.';
+      b.prepend(w);
+    }
+    return;
+  }
+  build[slotId]=compId;
+  updUI();
+  closeModal('slot-modal');
+}
+
+function rmComp(sid){ delete build[sid]; updUI(); closeModal('slot-modal'); }
+function closeModal(id){ document.getElementById(id).classList.add('hid'); }
+function totalCost(){ return Object.values(build).reduce((s,id)=>{const c=COMPS.find(c=>c.id===id);return s+(c?c.cost:0);},0); }
+
+/* ========================================================
+   UPDATE UI
+   ======================================================== */
+const SDEF={
+  'motor-fl':['⚙️','Двиг ЛП'],'motor-fr':['⚙️','Двиг ПП'],
+  'motor-rl':['⚙️','Двиг ЛЗ'],'motor-rr':['⚙️','Двиг ПЗ'],
+  nav:['🧭','Навигация'],battery:['🔋','Батарея'],
+  frame:['🔩','Корпус'],sensor:['📡','Сенсор'],ai:['🧠','ИИ']
+};
+function updUI(){
+  const cost=totalCost();
+  const pct=Math.min(100,cost/BMAX*100);
+  const bbar=document.getElementById('bbar');
+  bbar.style.width=pct+'%';
+  bbar.style.background=pct>90?'linear-gradient(90deg,#c03018,#e85030)':'linear-gradient(90deg,var(--copper),var(--amber))';
+  document.getElementById('bnum').textContent=`${cost.toLocaleString('ru')} / ${BMAX.toLocaleString('ru')} ¤`;
+  document.getElementById('bsb').textContent=`${cost.toLocaleString('ru')}¤`;
+
+  Object.entries(SDEF).forEach(([sid,[di,dl]])=>{
+    const comp=build[sid]?COMPS.find(c=>c.id===build[sid]):null;
+    const sg=document.getElementById('sg-'+sid);
+    const ic=document.getElementById('si-'+sid);
+    const lb=document.getElementById('sn-'+sid);
+    if(!sg) return;
+    if(comp){
+      sg.classList.add('fi');
+      if(ic) ic.textContent=comp.icon;
+      if(lb){ lb.className='slot-lbl fi'; lb.textContent=comp.name.substring(0,14); }
+    } else {
+      sg.classList.remove('fi');
+      if(ic) ic.textContent=di;
+      if(lb){ lb.className='slot-lbl'; lb.textContent=dl; }
+    }
+  });
+
+  const all=Object.values(build).map(id=>COMPS.find(c=>c.id===id)).filter(Boolean);
+  const fr=build.frame  ?COMPS.find(c=>c.id===build.frame)  :null;
+  const nv=build.nav    ?COMPS.find(c=>c.id===build.nav)    :null;
+  const bt=build.battery?COMPS.find(c=>c.id===build.battery):null;
+  const sn=build.sensor ?COMPS.find(c=>c.id===build.sensor) :null;
+
+  setLed('r-f',fr?fr.maxTemp>=58:null);
+  setLed('r-n',nv?!nv.gps:null);
+  setLed('r-b',bt?bt.hrs>=4:null);
+  setLed('r-s',sn?true:null);
+  setLed('r-i',all.length>=4?all.every(c=>c.isiri):null);
+
+  document.getElementById('hs-r').textContent=all.length>0?Math.round(all.filter(c=>c.isiri).length/all.length*100)+'%':'—';
+  document.getElementById('hs-a').textContent=bt?bt.hrs+'ч':'—';
+  renderCList();
+}
+function setLed(id,v){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.className='req-led'+(v===true?' ok':v===false?' no':'');
+}
+
+/* ========================================================
+   RUN TEST
+   ======================================================== */
+function runTest(){
+  const all=Object.values(build).map(id=>COMPS.find(c=>c.id===id)).filter(Boolean);
+  if(all.length<4){
+    document.getElementById('tres').innerHTML=
+      `<div class="t-log"><span class="terr">Установите минимум 4 компонента перед тестом.</span></div>`;
+    return;
+  }
+  const fr=build.frame  ?COMPS.find(c=>c.id===build.frame)  :null;
+  const nv=build.nav    ?COMPS.find(c=>c.id===build.nav)    :null;
+  const bt=build.battery?COMPS.find(c=>c.id===build.battery):null;
+  const sn=build.sensor ?COMPS.find(c=>c.id===build.sensor) :null;
+  const motors=['motor-fl','motor-fr','motor-rl','motor-rr']
+    .map(s=>build[s]?COMPS.find(c=>c.id===build[s]):null).filter(Boolean);
+  const ok=[],err=[];
+
+  if(!fr)              err.push('Корпус не установлен');
+  else if(fr.maxTemp<58) err.push(`Корпус перегревается: лимит ${fr.maxTemp}°C < 58°C`);
+  else ok.push(`Корпус выдерживает +58°C (лимит: ${fr.maxTemp}°C)`);
+
+  if(!nv)        err.push('Навигация не установлена');
+  else if(nv.gps) err.push('GPS теряет сигнал в тоннеле');
+  else ok.push(`Автономная навигация ±${nv.acc} м без GPS`);
+
+  if(!bt)          err.push('Батарея не установлена');
+  else if(bt.hrs<4) err.push(`Автономность ${bt.hrs}ч < 4ч`);
+  else ok.push(`Автономность ${bt.hrs}ч — норма`);
+
+  if(!sn) err.push('Сенсор не установлен');
+  else ok.push(`Сенсор «${sn.name}» активен`);
+
+  if(motors.filter(m=>m.maxTemp&&m.maxTemp<58).length>0) err.push('Двигатели перегреваются при +58°C');
+  else if(motors.length>0) ok.push(`${motors.length} двигателя работают при +58°C`);
+
+  const noI=all.filter(c=>!c.isiri);
+  if(noI.length>0) err.push(`Нет ISIRI у: ${noI.map(c=>c.name).join(', ')}`);
+  else ok.push('Все компоненты сертифицированы ISIRI');
+
+  const passed=err.length===0;
+  const rel=Math.max(22,97-err.length*17+(passed?Math.floor(Math.random()*4):0));
+  const logH=ok.map(p=>`<div class="tok">✓ ${p}</div>`).join('')
+            +err.map(e=>`<div class="terr">✗ ${e}</div>`).join('');
+
+  const mentorH=passed
+    ?`<div class="le" style="margin-top:14px;"><div class="l-av">🔧</div>
+       <div class="l-body"><div class="l-spk">Амир · Конструктор</div>
+       <div class="l-bub">UNIT-7 справился. Система прошла все проверки. Решение передано заказчику. Запись в Talent Bridge.</div></div></div>`
+    :`<div class="le" style="margin-top:14px;"><div class="l-av">🛡️</div>
+       <div class="l-body"><div class="l-spk">Фархад · Безопасность</div>
+       <div class="l-bub">Критических замечаний: ${err.length}. Устрани проблемы и запусти повторно. Провал — это тоже данные.</div></div></div>`;
+
+  if(passed) setTimeout(showCert,1400);
+
+  document.getElementById('tres').innerHTML=`
+    <div class="rcard">
+      <div class="r-status f-cin ${passed?'r-pass':'r-fail'}">${passed?'◈ Тест пройден':'✗ Тест не пройден'}</div>
+      <div class="m-row">
+        <div class="m-b"><div class="m-val f-cin" style="color:${rel>=95?'var(--teal)':rel>=70?'var(--amber)':'#e85030'}">${rel}%</div><div class="m-nm">Надёжность</div></div>
+        <div class="m-b"><div class="m-val f-cin" style="color:${bt&&bt.hrs>=4?'var(--teal)':'#e85030'}">${bt?bt.hrs+'ч':'—'}</div><div class="m-nm">Автономность</div></div>
+        <div class="m-b"><div class="m-val f-cin" style="color:${nv&&!nv.gps&&nv.acc<2?'var(--teal)':'var(--amber)'}">
+          ${nv&&!nv.gps?'±'+nv.acc+'м':'GPS ✗'}</div><div class="m-nm">Навигация</div></div>
+      </div>
+      <div class="t-log">${logH}</div>
+    </div>${mentorH}`;
+}
+
+function showCert(){
+  document.getElementById('res-body').innerHTML=`
+    <div class="cert">
+      <div class="cert-ico">🏅</div>
+      <div class="cert-t f-cin">UNIT-7 · Миссия выполнена</div>
+      <div class="cert-d">Система мониторинга тоннеля К-7<br>сертифицирована по стандарту ISIRI.<br><br>
+        Достижение добавлено в профиль Talent Bridge.<br>
+        Сертификат Open Badges 3.0 выдан.<br><br>
+        <em>Следующий этап: Акт II · «Первые решения»</em><br>
+        <em>Три повреждённые секции ждут UNIT-7</em>
+      </div>
+    </div>`;
+  document.getElementById('res-modal').classList.remove('hid');
+}
+
+/* ========================================================
+   LOG
+   ======================================================== */
+const LOGS=[
+  {av:'🔧',sp:'Амир · Конструктор',txt:'UNIT-7, добро пожаловать. Три акведука без мониторинга. Твоё задание: дрон-инспектор для тоннеля К-7.',al:false},
+  {av:'💻',sp:'Нейра · Программист ИИ',txt:'GPS не работает под землёй. Нужна инерциальная навигация или LiDAR — иначе дрон потеряется в тоннеле.',al:false},
+  {av:'🛡️',sp:'Фархад · Безопасность',txt:'Все компоненты должны иметь сертификат ISIRI. Без него заказчик решение не примет.',al:false},
+  {av:'⚠️',sp:'Системный журнал',txt:'ALERT: Трещины в 3 точках. Уровень воды −12 см/ч. Время до полного отказа: ~72 ч.',al:true},
+];
+function initLog(){
+  const w=document.getElementById('logwrap');
+  w.innerHTML='';
+  LOGS.forEach((e,i)=>setTimeout(()=>{
+    const d=document.createElement('div');d.className='le';
+    d.innerHTML=`<div class="l-av">${e.av}</div>
+      <div class="l-body">
+        <div class="l-spk">${e.sp}</div>
+        <div class="l-bub ${e.al?'al':''}">${e.txt}</div>
+      </div>`;
+    w.appendChild(d);w.scrollTop=w.scrollHeight;
+  },i*720));
+}
+
+/* ========================================================
+   TABS
+   ======================================================== */
+function stab(t){
+  document.querySelectorAll('.g-tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.g-tc').forEach(c=>c.classList.remove('on'));
+  document.querySelector(`.g-tab[onclick="stab('${t}')"]`).classList.add('on');
+  document.getElementById('tab-'+t).classList.add('on');
+}
+function resetBuild(){ if(!confirm('Сбросить сборку?')) return; build={}; updUI(); }
+function submitBuild(){ stab('test'); runTest(); }
+</script>
+</body>
+</html>
